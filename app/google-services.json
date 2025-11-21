@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "391824534853",
+    "firebase_url": "https://kidscontrolfyp-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "kidscontrolfyp",
+    "storage_bucket": "kidscontrolfyp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:391824534853:android:055e73badcfedb0ae5622c",
+        "android_client_info": {
+          "package_name": "com.example.kidscontrolapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNb00PKOs-1myF0wOvCX44X93rNooZmaU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:391824534853:android:60820d85df922698e5622c",
+        "android_client_info": {
+          "package_name": "com.example.kidtracker"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBNb00PKOs-1myF0wOvCX44X93rNooZmaU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,28 @@
+*.iml
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
+.DS_Store
+/build
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+<<<<<<< HEAD
+HEAD
+firebase-key.json 
+.env 
+firebase-key.json 
+.env 
+06033a8 (Initial commit of KidTracker backend)
+=======
+firebase-key.json 
+.env 
+>>>>>>> d54a46e (Ignore secrets locally)
+firebase-key.json 
+.env 
