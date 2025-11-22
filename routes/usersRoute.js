@@ -1,7 +1,7 @@
 ﻿// backend/routes/userRoute.js
 const express = require('express');
 const router = express.Router();
-const sendRegistrationEmail = require('../emailservice'); // Email service
+const sendRegistrationEmail = require('../emailService'); // Email service
 const { db } = require('../firebase'); // Firestore setup
 require('dotenv').config();
 
