@@ -18,7 +18,8 @@ const usersRoute = require('./routes/usersRoute');
 app.use('/api/users', usersRoute);  // All user routes start with /api/users
 
 // ============== MONGODB CONNECTION ===============
-mongoose.connect('mongodb://127.0.0.1:27017/kidtracker')
+// Hardcode MongoDB Atlas connection string for Render free tier
+mongoose.connect('mongodb+srv://perakmenang41_db_user:tfrgTUsElrMjr8D0@cluster0.mongodb.net/kidtracker?retryWrites=true&w=majority')
   .then(() => console.log("✅ MongoDB connected"))
   .catch(err => console.log("❌ MongoDB Error:", err));
 
