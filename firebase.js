@@ -1,5 +1,7 @@
 const admin = require('firebase-admin');
-const serviceAccount = require('./firebase-key.json'); // or 'serviceAccountKey.json', use your actual filename
+
+// Parse Firebase JSON from environment variable
+const serviceAccount = JSON.parse(process.env.FIREBASE_KEY_JSON);
 
 // Initialize Firebase Admin SDK
 admin.initializeApp({
@@ -9,5 +11,4 @@ admin.initializeApp({
 // Get Firestore instance
 const db = admin.firestore(); // Default Firestore database
 
-// Export Firestore to use in userRoute.js
 module.exports = { db };
