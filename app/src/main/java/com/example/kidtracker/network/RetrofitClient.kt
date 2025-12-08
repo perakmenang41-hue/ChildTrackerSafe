@@ -7,7 +7,7 @@ object RetrofitClient {
 
     val apiService: ApiService by lazy {
         Retrofit.Builder()
-            .baseUrl("http://192.168.0.6:5000/")   // for emulator
+            .baseUrl("https://childtrackersafe.onrender.com/")  // domain only
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(ApiService::class.java)

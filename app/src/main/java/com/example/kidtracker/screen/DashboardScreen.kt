@@ -18,32 +18,39 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.example.kidtracker.R
-import kotlinx.coroutines.runBlocking
 import com.example.kidtracker.system.DataStoreManager
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @Composable
 fun DashboardScreen(
     childUid: String,
     dataStoreManager: DataStoreManager,
-    navController: NavController
+    navController: NavHostController
 ) {
     val clipboardManager: ClipboardManager = LocalClipboardManager.current
+    val scope = rememberCoroutineScope()
 
-    // Collect child info from DataStore
-    val childName = runBlocking { dataStoreManager.getChildName() }
-    val childEmail = runBlocking { dataStoreManager.getChildEmail() }
+    var childName by remember { mutableStateOf("") }
+    var childEmail by remember { mutableStateOf("") }
+
+    // --- Collect DataStore suspend functions safely ---
+    LaunchedEffect(Unit) {
+        childName = dataStoreManager.getChildName() // suspend call
+        childEmail = dataStoreManager.getChildEmail() // suspend call
+    }
 
     // Show registration success first
-    var showSuccessPage by remember { mutableStateOf(true) }
+    var showSuccessPage by remember { mutableStateOf(false) }
 
     if (showSuccessPage) {
         RegistrationSuccessPage(childName) {
             showSuccessPage = false
         }
     } else {
-        MainInterface(childUid, childName, childEmail, clipboardManager)
+        MainInterface(childUid, childName, childEmail, clipboardManager, navController)
     }
 }
 
@@ -86,7 +93,8 @@ fun MainInterface(
     childUid: String,
     childName: String,
     childEmail: String,
-    clipboardManager: ClipboardManager
+    clipboardManager: ClipboardManager,
+    navController: NavHostController
 ) {
     var selectedTab by remember { mutableStateOf("Home") }
 
@@ -102,7 +110,7 @@ fun MainInterface(
                 .padding(24.dp)
         ) {
             when (selectedTab) {
-                "Home" -> HomeTab(childUid, childName, clipboardManager)
+                "Home" -> HomeTab(childUid, childName, clipboardManager, navController)
                 "Inbox" -> SimpleTab("Inbox messages will appear here")
                 "Profile" -> ProfileScreen(childName, childUid, childEmail)
             }
@@ -111,33 +119,35 @@ fun MainInterface(
 }
 
 @Composable
-fun HomeTab(childUid: String, childName: String, clipboardManager: ClipboardManager) {
+fun HomeTab(
+    childUid: String,
+    childName: String,
+    clipboardManager: ClipboardManager,
+    navController: NavHostController
+) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(
-            text = "Hello, $childName!",
+            "Hello, $childName!",
             style = MaterialTheme.typography.headlineMedium,
             fontWeight = FontWeight.Bold
         )
 
-        Text(
-            text = "Your Unique ID: $childUid",
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Text("Your Unique ID: $childUid", style = MaterialTheme.typography.bodyLarge)
 
         Text(
             text = "📋 Copy UID",
-            modifier = Modifier.clickable {
-                clipboardManager.setText(AnnotatedString(childUid))
-            },
+            modifier = Modifier.clickable { clipboardManager.setText(AnnotatedString(childUid)) },
             color = MaterialTheme.colorScheme.primary
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(
-            "Home content goes here. You can add fun features or info for the child.",
-            color = Color.Gray
-        )
+        Button(
+            onClick = { navController.navigate("memory_game") },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Play Memory Game", fontSize = 18.sp)
+        }
     }
 }
 
@@ -158,7 +168,6 @@ fun ProfileScreen(childName: String, childUid: String, childEmail: String) {
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Profile Image
         Box(
             modifier = Modifier
                 .size(100.dp)
@@ -169,7 +178,6 @@ fun ProfileScreen(childName: String, childUid: String, childEmail: String) {
             Text("IMG", color = Color.White)
         }
 
-        // Child Info
         Text("Name: $childName", fontWeight = FontWeight.Bold)
         Text("UID: $childUid")
         Text("Email: $childEmail")

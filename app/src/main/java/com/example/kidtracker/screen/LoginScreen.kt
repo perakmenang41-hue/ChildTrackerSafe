@@ -1,5 +1,6 @@
 package com.example.kidtracker.screen
 
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.compose.foundation.layout.*
@@ -79,13 +80,13 @@ fun LoginScreen(navController: NavController, dataStoreManager: DataStoreManager
         // Login Button
         Button(
             onClick = {
-                error = ""
                 if (email.isBlank() || password.isBlank()) {
-                    error = "Please enter both email and password"
+                    error = "Please enter email and password"
                     return@Button
                 }
 
                 loading = true
+                error = ""
 
                 firestore.collection("registered_users")
                     .whereEqualTo("email", email.trim())
@@ -95,12 +96,12 @@ fun LoginScreen(navController: NavController, dataStoreManager: DataStoreManager
                         if (result.isEmpty) {
                             error = "Email not registered"
                         } else {
-                            val user = result.documents[0]
-                            val storedPassword = user.getString("password") ?: ""
+                            val userDoc = result.documents[0]
+                            val storedPassword = userDoc.getString("password") ?: ""
                             if (storedPassword == password.trim()) {
-                                val childName = user.getString("name") ?: "Child"
-                                val childUid = user.getString("uniqueId") ?: ""
-                                val childEmail = user.getString("email") ?: ""
+                                val childName = userDoc.getString("name") ?: "Child"
+                                val childUid = userDoc.getString("uniqueId") ?: ""
+                                val childEmail = userDoc.getString("email") ?: ""
 
                                 // Save to DataStore
                                 scope.launch {
@@ -109,7 +110,7 @@ fun LoginScreen(navController: NavController, dataStoreManager: DataStoreManager
                                     dataStoreManager.saveChildEmail(childEmail)
                                 }
 
-                                // --- START LOCATION SERVICE ---
+                                // Start Location Service
                                 val intent = Intent(context, ChildLocationService::class.java)
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                     context.startForegroundService(intent)

@@ -1,3 +1,4 @@
+// com/example/kidtracker/location/ChildLocationUpdater.kt
 package com.example.kidtracker.location
 
 import android.content.Context
@@ -5,12 +6,11 @@ import android.os.BatteryManager
 import android.os.Build
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
-import com.example.kidtracker.system.DataStoreManager // <- use new one
+import com.google.firebase.firestore.SetOptions
+import com.example.kidtracker.system.DataStoreManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 
 class ChildLocationUpdater(
     private val context: Context,
@@ -19,34 +19,15 @@ class ChildLocationUpdater(
 ) {
 
     /**
-     * Updates the child location and status in Firestore.
-     * Fetches extra info (age, country, email, childName, registeredAt) from registered_users collection.
+     * Writes to collection "child_position" (this is the parent app's expected doc)
+     * Document ID = uniqueId stored in DataStore
      */
     fun updateLocation(latitude: Double, longitude: Double) {
         CoroutineScope(Dispatchers.IO).launch {
-            // Use Flow to get child UID from DataStore
-            val uniqueId = dataStoreManager.childUID.firstOrNull() ?: return@launch
+            val uniqueId = dataStoreManager.getChildUID() ?: return@launch
 
             try {
-                // Query registered_users by uniqueId
-                val querySnapshot = firestore.collection("registered_users")
-                    .whereEqualTo("uniqueId", uniqueId)
-                    .get()
-                    .await()
-
-                if (querySnapshot.isEmpty) {
-                    println("No registered user found with UID: $uniqueId")
-                    return@launch
-                }
-
-                val userDoc = querySnapshot.documents[0]
-                val age = userDoc.getString("age") ?: ""
-                val country = userDoc.getString("country") ?: ""
-                val email = userDoc.getString("email") ?: ""
-                val childNameFromDB = userDoc.getString("name") ?: "Child"
-                val registeredAt = userDoc.getTimestamp("registeredAt") ?: Timestamp.now()
-
-                // Get battery percentage
+                // battery percentage
                 val batteryManager = context.getSystemService(Context.BATTERY_SERVICE) as BatteryManager
                 val batteryPct = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                     batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY)
@@ -54,33 +35,27 @@ class ChildLocationUpdater(
 
                 val status = "online"
 
-                // Prepare data
-                val data = hashMapOf(
-                    "latitude" to latitude,
-                    "longitude" to longitude,
+                val payload = hashMapOf(
+                    "lat" to latitude,
+                    "lon" to longitude,
                     "battery" to batteryPct,
                     "status" to status,
-                    "childName" to childNameFromDB,
-                    "age" to age,
-                    "country" to country,
-                    "email" to email,
-                    "registeredAt" to registeredAt,
-                    "lastUpdated" to Timestamp.now()
+                    "lastUpdated" to Timestamp.now(),
+                    "lastUpdatedRaw" to System.currentTimeMillis()
                 )
 
-                // Update child_locations collection
-                firestore.collection("child_locations")
+                firestore.collection("child_position")
                     .document(uniqueId)
-                    .set(data)
+                    .set(payload, SetOptions.merge())
                     .addOnSuccessListener {
-                        println("Location & info updated for UID: $uniqueId")
+                        println("✅ child_position updated for UID: $uniqueId")
                     }
                     .addOnFailureListener { e ->
-                        println("Failed to update location: ${e.message}")
+                        println("❌ Firestore update failed: ${e.message}")
                     }
 
             } catch (e: Exception) {
-                println("Error fetching registered user data: ${e.message}")
+                println("❌ ChildLocationUpdater error: ${e.message}")
             }
         }
     }

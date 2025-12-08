@@ -10,25 +10,28 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.NavHostController
+import com.example.kidtracker.child.MotionSensorService
 import com.example.kidtracker.location.ChildLocationService
 import com.example.kidtracker.screen.ChildRegisterScreen
 import com.example.kidtracker.screen.LoginScreen
 import com.example.kidtracker.screen.DashboardScreen
+import com.example.kidtracker.screen.MemoryGameScreen
 import com.example.kidtracker.system.DataStoreManager
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 
 class MainActivity : ComponentActivity() {
 
     private lateinit var dataStoreManager: DataStoreManager
 
-    // --- NEW: Launcher for foreground location permission ---
+    // --- Launcher for foreground location permission ---
     private val locationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { isGranted: Boolean ->
+    ) { isGranted ->
         if (isGranted) {
             Toast.makeText(this, "Location permission granted", Toast.LENGTH_SHORT).show()
-            startChildLocationService() // <-- start service after permission granted
+            startChildLocationService() // start services after permission granted
         } else {
             Toast.makeText(this, "Location permission denied", Toast.LENGTH_SHORT).show()
         }
@@ -39,7 +42,7 @@ class MainActivity : ComponentActivity() {
 
         dataStoreManager = DataStoreManager(this)
 
-        // --- NEW: Request location permission at app start ---
+        // Request location permission at app start
         requestLocationPermission()
 
         setContent {
@@ -48,14 +51,38 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    // --- NEW: Function to request foreground location permission ---
+    // --- Request foreground location permission ---
     private fun requestLocationPermission() {
         locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
-    // --- NEW: Function to start the ChildLocationService ---
+    // --- Start the ChildLocationService ---
     private fun startChildLocationService() {
         val intent = Intent(this, ChildLocationService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+
+        // --- Start MotionSensorService at the same time with default UID (optional, can override after login) ---
+        startMotionSensorService()
+    }
+
+    // --- Start the MotionSensorService (default, will override after login) ---
+    private fun startMotionSensorService() {
+        val intent = Intent(this, MotionSensorService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
+        }
+    }
+
+    // --- Call this function after login with the actual childUID ---
+    fun startMotionService(childUID: String) {
+        val intent = Intent(this, MotionSensorService::class.java)
+        intent.putExtra("childUID", childUID)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(intent)
         } else {
@@ -64,12 +91,15 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-// --- DO NOT CHANGE: NavHost ---
+// --- NavHost ---
 @Composable
-fun KidTrackerNavHost(navController: androidx.navigation.NavHostController, dataStoreManager: DataStoreManager) {
+fun KidTrackerNavHost(
+    navController: NavHostController,
+    dataStoreManager: DataStoreManager
+) {
     NavHost(
         navController = navController,
-        startDestination = "child_register" // first screen
+        startDestination = "child_register"
     ) {
         composable("child_register") {
             ChildRegisterScreen(navController, dataStoreManager)
@@ -80,6 +110,10 @@ fun KidTrackerNavHost(navController: androidx.navigation.NavHostController, data
         composable("dashboard/{childUid}") { backStackEntry ->
             val childUid = backStackEntry.arguments?.getString("childUid") ?: ""
             DashboardScreen(childUid, dataStoreManager, navController)
+        }
+        // --- Memory Game route ---
+        composable("memory_game") {
+            MemoryGameScreen(onExit = { navController.popBackStack() })
         }
     }
 }

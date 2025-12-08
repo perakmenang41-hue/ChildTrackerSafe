@@ -14,10 +14,11 @@ import androidx.navigation.NavController
 import com.example.kidtracker.system.DataStoreManager
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
-import java.util.Locale
-import com.example.kidtracker.models.RegisterRequest
-import com.example.kidtracker.network.RetrofitClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import android.util.Log
+import com.example.kidtracker.models.RegisterRequest
+import com.example.kidtracker.system.RetrofitInstance
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -25,7 +26,6 @@ fun ChildRegisterScreen(
     navController: NavController,
     dataStoreManager: DataStoreManager
 ) {
-
     val context = LocalContext.current
     val firestore = FirebaseFirestore.getInstance()
     val scope = rememberCoroutineScope()
@@ -39,7 +39,9 @@ fun ChildRegisterScreen(
     var loading by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
 
-    val countries = Locale.getISOCountries().map { code -> Locale("", code).displayCountry }.sorted()
+    val countries = java.util.Locale.getISOCountries().map { code ->
+        java.util.Locale("", code).displayCountry
+    }.sorted()
 
     Column(
         modifier = Modifier
@@ -50,11 +52,13 @@ fun ChildRegisterScreen(
 
         Text("Register Child", style = MaterialTheme.typography.headlineMedium)
 
-        OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Full Name") },
+        OutlinedTextField(
+            value = name, onValueChange = { name = it }, label = { Text("Full Name") },
             modifier = Modifier.fillMaxWidth()
         )
 
-        OutlinedTextField(value = age, onValueChange = { age = it }, label = { Text("Age") },
+        OutlinedTextField(
+            value = age, onValueChange = { age = it }, label = { Text("Age") },
             modifier = Modifier.fillMaxWidth(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
         )
@@ -81,18 +85,19 @@ fun ChildRegisterScreen(
             }
         }
 
-        OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") },
+        OutlinedTextField(
+            value = email, onValueChange = { email = it }, label = { Text("Email") },
             modifier = Modifier.fillMaxWidth()
         )
 
-        OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Password") },
+        OutlinedTextField(
+            value = password, onValueChange = { password = it }, label = { Text("Password") },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation()
         )
 
         OutlinedTextField(
-            value = confirmPassword,
-            onValueChange = { confirmPassword = it },
+            value = confirmPassword, onValueChange = { confirmPassword = it },
             label = { Text("Confirm Password") },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = PasswordVisualTransformation()
@@ -100,7 +105,6 @@ fun ChildRegisterScreen(
 
         Button(
             onClick = {
-
                 if (name.isBlank() || age.isBlank() || country.isBlank() ||
                     email.isBlank() || password.isBlank() || confirmPassword.isBlank()
                 ) {
@@ -115,10 +119,8 @@ fun ChildRegisterScreen(
 
                 loading = true
 
-                // ================== CALL BACKEND API ==================
                 scope.launch {
                     try {
-                        // ✅ Create request once
                         val request = RegisterRequest(
                             name = name.trim(),
                             email = email.trim(),
@@ -127,19 +129,13 @@ fun ChildRegisterScreen(
                             password = password.trim()
                         )
 
-                        // 🔥 DEBUG LOGS HERE — before sending
                         Log.d("REGISTER_API", "Sending request: $request")
 
-                        // ✅ Send request
-                        val response = RetrofitClient.apiService.registerUser(request)
+                        val response = RetrofitInstance.api.registerUser(request)
 
-                        // 🔥 DEBUG LOG RESPONSE
-                        Log.d("REGISTER_API", "Response Code: ${response.code()}")
-                        Log.d("REGISTER_API", "Response Body: ${response.body()}")
-                        Log.e("REGISTER_ERROR", "Error Body: ${response.errorBody()?.string()}")
+                        Log.d("REGISTER_API", "Response Code: ${response.code()} Body: ${response.body()}")
 
                         if (response.isSuccessful && response.body()?.success == true) {
-
                             val uid = response.body()?.uniqueId ?: ""
 
                             // Save child info locally
@@ -147,29 +143,45 @@ fun ChildRegisterScreen(
                             dataStoreManager.saveChildEmail(email)
                             dataStoreManager.saveChildUID(uid)
 
-                            Toast.makeText(context, "Registered! UID emailed.", Toast.LENGTH_LONG).show()
+                            // ✅ Save in Firestore under "registered_users"
+                            val childData = hashMapOf(
+                                "uniqueId" to uid,          // ✅ Field used by parent to check
+                                "name" to name.trim(),
+                                "email" to email.trim(),
+                                "age" to age.trim(),
+                                "password" to password.trim(),
+                                "country" to country.trim(),
+                                "createdAt" to com.google.firebase.Timestamp.now()
+                            )
 
-                            navController.navigate("login") {
-                                popUpTo("child_register") { inclusive = true }
+                            firestore.collection("registered_users")
+                                .document(uid)              // Document ID is UID
+                                .set(childData)
+                                .addOnSuccessListener { Log.d("FIRESTORE", "Child saved: $uid") }
+                                .addOnFailureListener { e -> Log.e("FIRESTORE", "Failed: ${e.message}") }
+
+
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(context, "Registered! UID emailed.", Toast.LENGTH_LONG).show()
+                                navController.navigate("login") {
+                                    popUpTo("child_register") { inclusive = true }
+                                }
                             }
                         } else {
-                            Toast.makeText(
-                                context,
-                                response.body()?.message ?: "Server error",
-                                Toast.LENGTH_LONG
-                            ).show()
+                            withContext(Dispatchers.Main) {
+                                Toast.makeText(context, response.body()?.message ?: "Server error", Toast.LENGTH_LONG).show()
+                            }
                         }
 
                     } catch (e: Exception) {
                         Log.e("REGISTER_EXCEPTION", e.stackTraceToString())
-                        Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                        withContext(Dispatchers.Main) {
+                            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                        }
                     } finally {
                         loading = false
                     }
                 }
-
-                // ================== FIX 4 ==================
-                // FirebaseManager.sendUidEmail(...) removed because backend sends email
             },
             modifier = Modifier.fillMaxWidth(),
             enabled = !loading

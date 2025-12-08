@@ -10,11 +10,13 @@
     <!-- Location permissions -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
-    <!-- Background location requires extra attention on Android 10+ -->
+    <uses-permission android:name="android.permission.BODY_SENSORS"/>
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
+    <!-- Background location (Android 10+) -->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"
         tools:ignore="BackgroundLocationAccess"/>
 
-    <!-- Foreground service -->
+    <!-- Foreground services -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
 
@@ -53,6 +55,14 @@
             android:enabled="true"
             android:exported="false"
             android:foregroundServiceType="location"/>
+
+        <!-- Motion Sensor Service -->
+        <service
+            android:name=".child.MotionSensorService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location"/>
+
     </application>
 
 </manifest>

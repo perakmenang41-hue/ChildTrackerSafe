@@ -86,6 +86,12 @@ dependencies {
     implementation("com.google.firebase:firebase-common-ktx")
     implementation("com.google.firebase:firebase-database-ktx")
 
+    implementation ("androidx.compose.ui:ui:1.5.0")
+    implementation ("androidx.compose.material3:material3:1.2.0")
+    implementation ("androidx.navigation:navigation-compose:2.7.0")
+    implementation ("androidx.activity:activity-compose:1.8.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.0")
+
     // Retrofit + OkHttp
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
@@ -97,6 +103,19 @@ dependencies {
 
     // OSMDroid
     implementation("org.osmdroid:osmdroid-android:6.1.14")
+
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+
+    // Retrofit
+    implementation ("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation ("com.squareup.retrofit2:converter-gson:2.9.0")
+
+// OkHttp (optional but recommended)
+    implementation ("com.squareup.okhttp3:logging-interceptor:4.10.0")
+
 
     // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")

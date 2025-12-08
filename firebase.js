@@ -1,7 +1,7 @@
 const admin = require('firebase-admin');
 
-// Parse Firebase JSON from environment variable
-const serviceAccount = JSON.parse(process.env.FIREBASE_KEY_JSON);
+// Load Firebase service account key directly from the JSON file
+const serviceAccount = require('./firebase-key.json');
 
 // Initialize Firebase Admin SDK
 admin.initializeApp({
@@ -9,6 +9,6 @@ admin.initializeApp({
 });
 
 // Get Firestore instance
-const db = admin.firestore(); // Default Firestore database
+const db = admin.firestore();
 
 module.exports = { db };
