@@ -1,13 +1,17 @@
-const mongoose = require('mongoose');
+﻿const admin = require('./firebase'); // Your Firebase admin instance
+const db = admin.firestore();
 
-mongoose.connect('mongodb://127.0.0.1:27017/kidtracker')
-  .then(async () => {
-    console.log("MongoDB connected");
-    const result = await mongoose.connection.collection('users').deleteMany({});
-    console.log("Deleted documents:", result.deletedCount);
-    process.exit(0);
-  })
-  .catch(err => {
+async function clearUsers() {
+    const usersSnapshot = await db.collection('users').get();
+    const batch = db.batch();
+
+    usersSnapshot.forEach(doc => batch.delete(doc.ref));
+
+    await batch.commit();
+    console.log(`✅ Deleted ${usersSnapshot.size} users`);
+}
+
+clearUsers().then(() => process.exit(0)).catch(err => {
     console.error(err);
     process.exit(1);
-  });
+});

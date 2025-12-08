@@ -3,14 +3,12 @@ const express = require('express');
 const router = express.Router();
 const sendRegistrationEmail = require('../emailService'); // Email service
 const { db } = require('../firebase'); // Firestore setup
-require('dotenv').config();
 
 // ===================== REGISTER =====================
 router.post('/register', async (req, res) => {
   try {
     const { name, email, age, country, password } = req.body;
 
-    // Validate required fields
     if (!name || !email || !age || !country || !password) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
@@ -33,9 +31,9 @@ router.post('/register', async (req, res) => {
       email,
       age,
       country,
-      password, // Note: in production, hash passwords
+      password, // ⚠️ Hash in production
       uniqueId,
-      registeredAt: new Date()
+      registeredAt: new Date().toISOString()
     });
 
     // Send UID email
@@ -58,12 +56,11 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
     if (!email || !password) {
       return res.status(400).json({ success: false, message: "Email and password required" });
     }
 
-    // Find user by email + password
+    // Query user
     const snapshot = await db.collection('registered_users')
       .where('email', '==', email)
       .where('password', '==', password)
@@ -73,8 +70,7 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ success: false, message: "Invalid email or password" });
     }
 
-    const userDoc = snapshot.docs[0];
-    const userData = userDoc.data();
+    const userData = snapshot.docs[0].data();
 
     res.status(200).json({
       success: true,
