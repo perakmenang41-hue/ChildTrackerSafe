@@ -4,7 +4,7 @@ const express = require('express');
 const cors = require('cors');
 
 const { db } = require('./firebase'); // Firestore setup
-const usersRoute = require('./routes/userRoute'); // Firestore-based user routes
+const usersRoute = require('./routes/usersRoute'); // Firestore-based user routes
 
 const app = express();
 
