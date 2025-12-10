@@ -50,7 +50,7 @@ fun DashboardScreen(
             showSuccessPage = false
         }
     } else {
-        MainInterface(childUid, childName, childEmail, clipboardManager, navController)
+        MainInterface(childUid, childName, childEmail, clipboardManager, navController, dataStoreManager)
     }
 }
 
@@ -94,7 +94,8 @@ fun MainInterface(
     childName: String,
     childEmail: String,
     clipboardManager: ClipboardManager,
-    navController: NavHostController
+    navController: NavHostController,
+    dataStoreManager: DataStoreManager
 ) {
     var selectedTab by remember { mutableStateOf("Home") }
 
@@ -111,12 +112,13 @@ fun MainInterface(
         ) {
             when (selectedTab) {
                 "Home" -> HomeTab(childUid, childName, clipboardManager, navController)
-                "Inbox" -> SimpleTab("Inbox messages will appear here")
+                "Inbox" -> InboxScreen(dataStoreManager)   // <-- UPDATED HERE
                 "Profile" -> ProfileScreen(childName, childUid, childEmail)
             }
         }
     }
 }
+
 
 @Composable
 fun HomeTab(
@@ -142,14 +144,37 @@ fun HomeTab(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // --- Memory Game button ---
         Button(
             onClick = { navController.navigate("memory_game") },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Play Memory Game", fontSize = 18.sp)
         }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // --- Pattern Sequencing Game button ---
+        Button(
+            onClick = { navController.navigate("pattern_game") },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Play Pattern Sequencing Game", fontSize = 18.sp)
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // --- Tap The Mole ---
+        Button(
+            onClick = { navController.navigate("tap_the_mole") },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Tap The Mole Game")
+        }
+
     }
 }
+
 
 @Composable
 fun SimpleTab(message: String) {

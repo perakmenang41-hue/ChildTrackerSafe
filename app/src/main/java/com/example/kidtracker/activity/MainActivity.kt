@@ -13,7 +13,10 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.NavHostController
+import com.example.kidtracker.screen.InboxScreen
+import com.example.kidtracker.child.PatternSequencingGameScreen
 import com.example.kidtracker.child.MotionSensorService
+import com.example.kidtracker.child.TapTheMoleGameScreen
 import com.example.kidtracker.location.ChildLocationService
 import com.example.kidtracker.screen.ChildRegisterScreen
 import com.example.kidtracker.screen.LoginScreen
@@ -113,7 +116,29 @@ fun KidTrackerNavHost(
         }
         // --- Memory Game route ---
         composable("memory_game") {
-            MemoryGameScreen(onExit = { navController.popBackStack() })
+            MemoryGameScreen(
+                dataStoreManager = dataStoreManager, // pass it here
+                onExit = { navController.popBackStack() }
+            )
         }
+        // --- Pattern Sequencing Game route ---
+        composable("pattern_game") {
+            PatternSequencingGameScreen(
+                dataStoreManager = dataStoreManager, // pass it here
+                onExit = { navController.popBackStack() }
+            )
+        }
+        // --- Tap The Mole ---
+        composable("tap_the_mole") {
+            TapTheMoleGameScreen(
+                dataStoreManager = dataStoreManager,
+                onExit = { navController.popBackStack() }
+            )
+        }
+        // --- Inbox ---
+        composable("inbox") {
+            InboxScreen(dataStoreManager)
+        }
+
     }
 }
